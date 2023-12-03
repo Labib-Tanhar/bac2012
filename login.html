@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BAC</title>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Comfortaa:wght@500&display=swap');
+
+        body {
+            font-family: 'Comfortaa', sans-serif;
+            background-color: #fff;
+            color: #000000;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        .login-container {
+            max-width: 400px;
+            padding: 20px;
+            border: 2px solid #FEA1A1; /* Thick border */
+            border-radius: 12px;
+            text-align: left;
+    
+        }
+
+        .logo-container img {
+            max-width: 20%;
+            height: auto;
+        }
+        .message-text {
+            margin-bottom: 20px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #57636C;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            margin-bottom: 8px;
+        }
+
+        input {
+            padding: 10px;
+            margin-bottom: 16px;
+            box-sizing: border-box;
+            border: 2px solid #E0E3E7; /* Thick border for input fields */
+            border-radius: 10px; /* Slight border-radius for a curved appearance */
+            color: #000000; /* Set text color to black */
+        }
+
+        input:focus::placeholder {
+            color: transparent; /* Hide placeholder text on focus */
+        }
+
+        button {
+            background-color: #FEA1A1;
+            color: white;
+            padding: 12px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow effect */
+        }
+
+
+        button:hover {
+            background-color: #FEA1A1;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Slightly stronger shadow on hover */
+        }
+        .error-message {
+            color: red;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="logo-container">
+            <h2>স্বাগতম</h2>
+        </div>
+              <div class="message-text">
+            <p>প্রবেশ করতে নিচের ফরমটি পূরণ করি</p>
+        </div>
+        <form id="login-form" novalidate>
+            <label for="userID"></label>
+            <input type="text" id="userID" name="userID" required placeholder="User ID">
+        
+            <label for="password"></label>
+            <input type="password" id="password" name="password" required placeholder="Password">
+        
+            <button type="submit">প্রবেশ</button>
+        </form>        
+        <p id="error-message" class="error-message"></p>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth.js"></script>
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBhDyy-uWtvbZSnQrCFFubX02CwznIPYp8",
+            authDomain: "bac-2012.firebaseapp.com",
+            projectId: "bac-2012",
+            storageBucket: "bac-2012.appspot.com",
+            messagingSenderId: "1080877923320",
+            appId: "1:1080877923320:web:fcd3b6a920f0cf0330740d",
+            measurementId: "G-VMFJXLEFYQ"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        const loginForm = document.getElementById('login-form');
+
+        loginForm.addEventListener('submit', async function (event) {
+            event.preventDefault();
+
+            const userID = loginForm.userID.value;
+            const password = loginForm.password.value;
+
+            try {
+                // Assuming you are using Firebase Authentication
+                const userCredential = await firebase.auth().signInWithEmailAndPassword(userID, password);
+
+                // If the authentication is successful, you can redirect or perform other actions
+                console.log("User logged in:", userCredential.user);
+            } catch (error) {
+                console.error(error.message);
+                // Handle authentication errors here
+                showError(error.message);
+            }
+        });
+
+        function showError(message) {
+            const errorMessage = document.getElementById('error-message');
+            errorMessage.textContent = message;
+        }
+    </script>
+</body>
+</html>
