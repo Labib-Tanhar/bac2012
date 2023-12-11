@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Attendance Calendar</title>
+    <style>
+        .present {
+            background-color: green;
+        }
+        
+        .absent {
+            background-color: red;
+        }
+        .absence {
+    color: red;
+}
+        .attendance {
+    color: green;
+    </style>
+</head>
+<body>
+    <h1>Attendance Calendar</h1>
+    
+    <button id="prevBtn">Previous</button>
+    <button id="nextBtn">Next</button>
+    <p id="year"></p>
+    <table>
+        <thead>
+            <tr>
+                <th>Sun</th>
+                <th>Mon</th>
+                <th>Tue</th>
+                <th>Wed</th>
+                <th>Thu</th>
+                <th>Fri</th>
+                <th>Sat</th>
+            </tr>
+        </thead>
+        <tbody id="calendarBody">
+        </tbody>
+    </table>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-analytics.js"></script>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <script>
+    // Initialize Firebase
+    var firebaseConfig = {
+        apiKey: "AIzaSyBhDyy-uWtvbZSnQrCFFubX02CwznIPYp8",
+                authDomain: "bac-2012.firebaseapp.com",
+                projectId: "bac-2012",
+                storageBucket: "bac-2012.appspot.com",
+                messagingSenderId: "1080877923320",
+                appId: "1:1080877923320:web:41d0cfb6b3cb7da530740d",
+                measurementId: "G-75BX9SCCLV"
+    };
+    firebase.initializeApp(firebaseConfig);
+
+    // Firestore reference
+    var db = firebase.firestore();
+
+    // Specify the user ID
+    var userId = "1001";
+
+    // Fetch absence dates from Firestore
+    var absenceDates = [];
+    db.collection("users").doc(userId).collection("absences").get().then((querySnapshot) => {
+        querySnapshot.forEach((doc) => {
+            absenceDates.push(new Date(doc.id));
+        });
+        generateCalendar(currentYear, currentMonth);
+    });
+
+    // Calendar class
+    class Calendar {
+        constructor(year, month) {
+            this.year = year;
+            this.month = month;
+            this.daysInMonth = new Date(year, month + 1, 0).getDate();
+            this.firstDay = new Date(year, month, 1).getDay();
+        }
+
+        generateCalendarBody() {
+            document.getElementById("calendarBody").innerHTML = "";
+
+            for (let i = 0; i < 6; i++) {
+                const row = document.createElement("tr");
+
+                for (let j = 0; j < 7; j++) {
+                    const date = i * 7 + j + 1 - this.firstDay;
+
+                    if (date < 1 || date > this.daysInMonth) {
+                        // Empty cell
+                        const cell = document.createElement("td");
+                        row.appendChild(cell);
+                        continue;
+                    }
+
+                    const cell = document.createElement("td");
+                    cell.textContent = date;
+                    cell.classList.add(isAbsent(new Date(this.year, this.month, date)) ? "absent" : "present");
+
+                    row.appendChild(cell);
+                }
+
+                document.getElementById("calendarBody").appendChild(row);
+            }
+        }
+    }
+
+    function isAbsent(date) {
+        return absenceDates.some(absenceDate => absenceDate.getTime() === date.getTime());
+    }
+    // Function to generate the calendar
+    function generateCalendar(year, month) {
+        // Create a new calendar object
+        const calendar = new Calendar(year, month);
+
+        // Update the year display
+        document.getElementById('year').textContent = 'Year: ' + calendar.year;
+
+        // Generate the calendar body
+        calendar.generateCalendarBody();
+    }
+
+    // Event listener for previous button
+    document.getElementById("prevBtn").addEventListener("click", function () {
+        // Decrease the month by 1
+        currentMonth--;
+
+        if (currentMonth < 0) {
+            currentMonth = 11;
+            currentYear--;
+        }
+
+        // Generate the calendar for the new month
+        generateCalendar(currentYear, currentMonth);
+    });
+
+    // Event listener for next button
+    document.getElementById("nextBtn").addEventListener("click", function () {
+        // Increase the month by 1
+        currentMonth++;
+
+        if (currentMonth > 11) {
+            currentMonth = 0;
+            currentYear++;
+        }
+
+        // Generate the calendar for the new month
+        generateCalendar(currentYear, currentMonth);
+    });
+
+    // Initial generation of the calendar
+    var currentYear = new Date().getFullYear();
+    var currentMonth = new Date().getMonth();
+
+    // Add click event to calendar cells to update attendance
+    document.getElementById("calendarBody").addEventListener("click", function (event) {
+        const target = event.target;
+
+        if (target.tagName !== "TD") return;
+
+        const date = parseInt(target.textContent);
+        const isPresent = target.classList.contains("present");
+
+        if (isPresent) {
+            target.classList.remove("present");
+            target.classList.add("absent");
+            // Update attendance in Firestore
+            db.collection("users").doc(userId).collection("absences").doc(`${currentYear}-${currentMonth + 1}-${date}`).set({}).then(() => {
+                console.log("Marked absent on " + date + "/" + (currentMonth + 1) + "/" + currentYear);
+            });
+        } else {
+            target.classList.remove("absent");
+            target.classList.add("present");
+            // Remove absence record from Firestore
+            db.collection("users").doc(userId).collection("absences").doc(`${currentYear}-${currentMonth + 1}-${date}`).delete().then(() => {
+                console.log("Marked present on " + date + "/" + (currentMonth + 1) + "/" + currentYear);
+            });
+        }
+    });
+</script>
+</body>
+</html>
